@@ -1,0 +1,120 @@
+{% load static %}
+{% block extrahead %}
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+</head>
+{% endblock %}
+{% block content %}
+<h1>Color :</h1>
+<div id="text">
+</div>
+<div id = "report">    
+</div>
+<style>
+
+</style>
+{% endblock %}
+{% block javascript %}
+<script>
+    var color = "";
+    var random = Math.floor(Math.random() * 2);
+    var count = 1;
+    function uuidv4() {
+        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );   
+    }
+
+    function displayColor(x) {
+        var result = document.getElementById("text");
+        if (x == 0 || x =="red") {
+            result.innerHTML = "<h1 style='color: red'>red</h1>";
+            color = "red";
+        }
+        else if (x == 1 || x =="blue") {
+            result.innerHTML = "<h1 style='color: blue'>blue</h1>";
+            color = "blue";
+        }
+    }
+
+    function setCookie(cname, cvalue, color, count) {       
+        document.cookie = cname + "=" + cvalue + "&" + "color=" + color + "&" + "count=" + count;
+    }
+
+    function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            console.log(decodedCookie)
+            let ca = decodedCookie.split(';');
+            console.log(ca)
+            for (let i = 0; i < ca.length; i++) {
+                let cl = ca[i].split('&');
+                for (let k = 0; k < cl.length; k++) {
+                    while (cl[k].charAt(0) == ' ') {
+                        cl[k] = cl[k].substring(1);
+                    }
+                    console.log(cl[k])
+                    if (cl[k].indexOf(name) == 0) {
+                        return cl[k].substring(name.length, cl[k].length);
+                    }
+                }
+            }
+            return "";
+        }
+
+    function checkCookie() {
+        let user = getCookie("username");
+        if (user != "") {
+            color = getCookie("color");
+            count = getCookie("count");
+            count = parseInt(count);
+            displayColor(color);
+            count = count + 1;
+            setCookie("username", user, color, count)
+            console.log("count"+(count));
+            console.log("color"+(color));
+            // alert("Welcome again " + user + color + count);
+        } else {
+            user = uuidv4();
+            displayColor(random);
+            // console.log(`user: ${user}`)
+            if (user != "" && user != null) {
+                setCookie("username", user, color, 1);
+            }
+        }
+        $.ajax({
+            headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            type: "POST",
+            url: window.location.pathname,
+            data: JSON.stringify({
+                user : user,
+                color : color,
+                count : count
+            }),
+            success: function (output) {
+                console.log("yeah!");
+            }
+        });
+    }    
+    checkCookie();
+
+    function getReport(){
+        $.get(`${window.location.pathname + "report"}`,function(data){
+            // console.log(data)
+            for (let d of JSON.parse(data)){
+                $("#report").append(
+                    `<tr>
+                        <td>${d[0]}</td>
+                        <td>${d[1]}</td>
+                        <td>${d[2]}</td>
+                    <tr>`
+                )
+            }
+        })
+    }
+    setTimeout(10000)
+    getReport();
+    
+</script>
+{% endblock %}
+
